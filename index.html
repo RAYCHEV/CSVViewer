@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CSV Viewer</title>
+    <style>
+        body {
+            background-color: #000000;
+            color: #FFFFFF;
+            font-family: 'Courier New', monospace;
+        }
+        a {
+            color: #FFFFFF;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        #notification {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #444;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #888;
+            padding: 10px;
+            text-align: left;
+        }
+        th {
+            background-color: #333;
+        }
+        td {
+            cursor: pointer;
+        }
+        td:hover {
+            background-color: #555;
+        }
+        input[type="file"] {
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>CSV Viewer</h1>
+    <input type="file" id="csvFileInput" accept=".csv" />
+    <div id="notification"></div>
+    <div id="tableContainer"></div>
+
+    <script>
+        function copyToClipboard(event) {
+            event.preventDefault();
+            var text = event.target.innerText;
+            navigator.clipboard.writeText(text).then(function() {
+                console.log('Copying to clipboard was successful!');
+                showNotification(text);
+                event.target.style.color = 'skyblue';
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
+        }
+
+        function showNotification(text) {
+            var notification = document.getElementById('notification');
+            notification.innerText = 'Copied: ' + text;
+            notification.style.display = 'block';
+            setTimeout(function() {
+                notification.style.display = 'none';
+            }, 3000);
+        }
+
+        function displayCSVTable(csvText) {
+            const rows = csvText.split('\n');
+            const table = document.createElement('table');
+            rows.forEach((row, rowIndex) => {
+                const tr = document.createElement('tr');
+                const cells = row.split(',');
+                cells.forEach((cell) => {
+                    const cellElement = rowIndex === 0 ? document.createElement('th') : document.createElement('td');
+                    cellElement.innerText = cell.trim();
+                    if (rowIndex !== 0) {
+                        cellElement.onclick = copyToClipboard;
+                    }
+                    tr.appendChild(cellElement);
+                });
+                table.appendChild(tr);
+            });
+            const tableContainer = document.getElementById('tableContainer');
+            tableContainer.innerHTML = ''; // Clear previous content
+            tableContainer.appendChild(table);
+        }
+
+        document.getElementById('csvFileInput').addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    displayCSVTable(e.target.result);
+                };
+                reader.readAsText(file);
+            }
+        });
+    </script>
+</body>
+</html>
