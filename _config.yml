@@ -1,0 +1,6 @@
+# _config.yml
+
+title: CSVViewer
+description: A lightweight CSV Viewer web application.
+baseurl: "/CSVViewer" # The base path for your project
+permalink: /:path/
