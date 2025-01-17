@@ -70,6 +70,19 @@
         .remove-btn:hover {
             background-color: #cc0000;
         }
+        /* Add style for save button */
+        .save-btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            margin-left: 10px;
+        }
+        .save-btn:hover {
+            background-color: #45a049;
+        }
     </style>
 </head>
 <body>
@@ -77,12 +90,15 @@
     <div class="top-bar">
         <input type="file" id="csvFileInput" accept=".csv" />
         <input type="text" id="searchInput" placeholder="Search..." />
+        <button id="saveButton" class="save-btn" style="display: none;">Save CSV</button>
     </div>
 
     <div id="notification"></div>
     <div id="tableContainer"></div>
 
     <script>
+        let originalFilename = ''; // Store the original filename
+
         function copyToClipboard(event) {
             event.preventDefault();
             var text = event.target.innerText;
@@ -161,16 +177,47 @@
             }
         }
 
+        function saveCSV() {
+            const table = document.querySelector('table');
+            if (!table) return;
+
+            const rows = Array.from(table.querySelectorAll('tr'));
+            let csvContent = '';
+
+            rows.forEach((row, index) => {
+                // Get all cells except the first one (remove button column)
+                const cells = Array.from(row.querySelectorAll('th, td')).slice(1);
+                const rowData = cells.map(cell => cell.innerText).join(',');
+                csvContent += rowData + '\n';
+            });
+
+            // Create blob and download
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = originalFilename || 'export.csv';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            window.URL.revokeObjectURL(url);
+        }
+
         document.getElementById('csvFileInput').addEventListener('change', function(event) {
             const file = event.target.files[0];
             if (file) {
+                originalFilename = file.name; // Store the original filename
                 const reader = new FileReader();
                 reader.onload = function(e) {
                     displayCSVTable(e.target.result);
+                    document.getElementById('saveButton').style.display = 'block'; // Show save button
                 };
                 reader.readAsText(file);
             }
         });
+
+        // Add save button event listener
+        document.getElementById('saveButton').addEventListener('click', saveCSV);
 
         document.getElementById('searchInput').addEventListener('input', function(event) {
             filterTable(event.target.value);
